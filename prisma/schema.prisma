@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  image         String?
+  plan          String   @default("free")
+  googleId      String?
+  accessToken   String?
+  refreshToken  String?
+  searchesToday Int      @default(0)
+  lastSearchDate DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subscriptions    Subscription[]
+  channelAnalyses  ChannelAnalysis[]
+  videoAnalyses    VideoAnalysis[]
+  savedProjects    SavedProject[]
+  alerts           Alert[]
+  searchLogs       SearchLog[]
+  invoices         Invoice[]
+  watchlist        Watchlist[]
+}
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String
+  plan          String
+  status        String   @default("active")
+  paystackCode  String?
+  paystackEmail String?
+  startDate     DateTime @default(now())
+  endDate       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  invoices Invoice[]
+}
+
+model ChannelAnalysis {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String
+  channelName String?
+  data      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model VideoAnalysis {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  videoTitle String?
+  data      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SavedProject {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  type      String
+  data      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  data      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model SearchLog {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  query     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Invoice {
+  id             String   @id @default(cuid())
+  userId         String
+  subscriptionId String?
+  amount         Float
+  currency       String   @default("USD")
+  status         String   @default("pending")
+  paystackRef    String?
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  channelId String
+  channelName String?
+  channelThumb String?
+  alertType String   @default("all")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model FeatureFlag {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  enabled     Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model PaymentLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  eventType   String
+  reference   String?
+  amount      Float?
+  currency    String?
+  plan        String?
+  status      String?
+  rawPayload  String
+  createdAt   DateTime @default(now())
+}
